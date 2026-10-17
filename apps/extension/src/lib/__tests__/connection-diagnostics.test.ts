@@ -112,6 +112,34 @@ describe("connection diagnostic recorder", () => {
     expect(interval).not.toHaveBeenCalled();
   });
 
+  it("persists an event arriving between write completion and release of the writer", async () => {
+    const storage = memoryStore();
+    const recorder = createDiagnosticRecorder(storage, options());
+    await recorder.flush();
+    let release!: () => void;
+    let started!: () => void;
+    const writing = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const originalWrite = storage.write.getMockImplementation()!;
+    storage.write.mockImplementationOnce(
+      (snapshot) =>
+        new Promise<void>((resolve) => {
+          void originalWrite(snapshot);
+          release = resolve;
+          started();
+        }),
+    );
+    recorder.record("socket.open", { generation: 1 });
+    const pending = recorder.flush();
+    await writing;
+    release();
+    queueMicrotask(() => recorder.record("socket.close", { generation: 1, code: 1006 }));
+    await pending;
+    for (let i = 0; i < 8; i++) await Promise.resolve();
+    expect(storage.value().events.at(-1)?.type).toBe("socket.close");
+  });
+
   it("isolates a failed read and still records this worker", async () => {
     const storage = memoryStore();
     storage.read.mockRejectedValueOnce(new Error("private storage error"));

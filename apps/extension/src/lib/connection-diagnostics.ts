@@ -213,6 +213,7 @@ export function createDiagnosticRecorder(
   async function flush(): Promise<void> {
     await ready;
     if (writing) return writing;
+    let failed = false;
     writing = (async () => {
       while (savedRevision !== revision) {
         const target = revision;
@@ -221,11 +222,13 @@ export function createDiagnosticRecorder(
           savedRevision = target;
         } catch {
           writeFailures++;
+          failed = true;
           break;
         } // A later real event may retry; never install a retry timer.
       }
     })().finally(() => {
       writing = null;
+      if (!failed && savedRevision !== revision) schedule();
     });
     return writing;
   }
