@@ -87,7 +87,8 @@ function sanitizeDetails(input: unknown): Details {
   const result: Details = {};
   if (!input || typeof input !== "object") return result;
   for (const [key, value] of Object.entries(input)) {
-    if (typeof value === "string" && strings[key]?.includes(value)) result[key] = value;
+    if (typeof value === "string" && Object.hasOwn(strings, key) && strings[key].includes(value))
+      result[key] = value;
     if (typeof value === "number" && numbers.has(key) && Number.isFinite(value) && value >= 0)
       result[key] = value;
     if (typeof value === "boolean" && booleans.has(key)) result[key] = value;

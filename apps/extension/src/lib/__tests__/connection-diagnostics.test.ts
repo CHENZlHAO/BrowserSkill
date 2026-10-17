@@ -24,6 +24,18 @@ afterEach(() => {
 });
 
 describe("connection diagnostic recorder", () => {
+  it("ignores unknown fields that share names with object prototype properties", async () => {
+    const storage = memoryStore();
+    const recorder = createDiagnosticRecorder(storage, options());
+    recorder.record("controller.request", {
+      constructor: "PRIVATE",
+      toString: "PRIVATE",
+      state: "connecting",
+    });
+    await recorder.flush();
+    expect(storage.value().events.at(-1)?.details).toEqual({ state: "connecting" });
+  });
+
   it("does not report a worker restart when recording is enabled later", async () => {
     const storage = memoryStore();
     const recorder = createDiagnosticRecorder(storage, {
