@@ -1,10 +1,10 @@
-/** Diagnostic build only: observes lifecycle events without changing retry policy. */
-export const DIAGNOSTIC_STORAGE_KEY = "bsk_issue395_diagnostics_v1";
+/** Optional observations; no connection policy or timers live in this module. */
+export const DIAGNOSTIC_STORAGE_KEY = "bsk_connection_diagnostics_v1";
 export const MAX_DIAGNOSTIC_EVENTS = 2048;
-export const DIAGNOSTIC_BUILD = "ext-v0.3.2@75ba294+issue395.1";
 
 const EVENT_TYPES = [
   "worker.start",
+  "diagnostics.enabled",
   "socket.attempt",
   "socket.factory-failed",
   "socket.open",
@@ -131,6 +131,7 @@ export function createDiagnosticRecorder(
   options: {
     bootId: string;
     build: string;
+    initialEvent?: "worker.start" | "diagnostics.enabled";
     clock?: () => { at: string; monotonicMs: number };
   },
 ): DiagnosticRecorder {
@@ -199,6 +200,13 @@ export function createDiagnosticRecorder(
       droppedEvents += count(previous.droppedEvents) + previous.events.length - history.length;
       readFailures += count(previous.readFailures);
       writeFailures += count(previous.writeFailures);
+      const offset = history.reduce(
+        (next, event) =>
+          event.bootId === options.bootId ? Math.max(next, event.sequence + 1) : next,
+        0,
+      );
+      for (const event of events) event.sequence += offset;
+      sequence += offset;
       events = [...history, ...events];
       bound();
     })
@@ -232,7 +240,7 @@ export function createDiagnosticRecorder(
     });
     return writing;
   }
-  record("worker.start");
+  record(options.initialEvent ?? "worker.start");
   return { record, snapshot, flush };
 }
 

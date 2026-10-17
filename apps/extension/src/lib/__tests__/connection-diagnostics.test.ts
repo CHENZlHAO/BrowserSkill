@@ -24,6 +24,30 @@ afterEach(() => {
 });
 
 describe("connection diagnostic recorder", () => {
+  it("does not report a worker restart when recording is enabled later", async () => {
+    const storage = memoryStore();
+    const recorder = createDiagnosticRecorder(storage, {
+      ...options(),
+      initialEvent: "diagnostics.enabled",
+    });
+    await recorder.flush();
+    expect(storage.value().events.map((event) => event.type)).toEqual(["diagnostics.enabled"]);
+  });
+
+  it("continues retained sequence numbers when recording restarts in the same worker", async () => {
+    const storage = memoryStore();
+    const first = createDiagnosticRecorder(storage, options());
+    first.record("socket.open");
+    await first.flush();
+    const second = createDiagnosticRecorder(storage, {
+      ...options(),
+      initialEvent: "diagnostics.enabled",
+    });
+    second.record("socket.close");
+    await second.flush();
+    expect(storage.value().events.map((event) => event.sequence)).toEqual([0, 1, 2, 3]);
+  });
+
   it("preserves earlier boot events when a new recorder reads persisted storage", async () => {
     const storage = memoryStore();
     const first = createDiagnosticRecorder(storage, options());
