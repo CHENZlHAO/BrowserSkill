@@ -41,6 +41,16 @@ async function drain() {
 afterEach(() => setDiagnosticRecorder(null));
 
 describe("opt-in connection diagnostics runtime", () => {
+  it("isolates synchronous preference API failures from background startup", async () => {
+    const storage = store();
+    storage.get.mockImplementationOnce(() => {
+      throw new Error("storage unavailable");
+    });
+    const runtime = startConnectionDiagnostics(storage, options);
+    await expect(runtime.ready).resolves.toBeUndefined();
+    expect(storage.set).not.toHaveBeenCalled();
+  });
+
   it.each([
     undefined,
     false,

@@ -43,8 +43,8 @@ export function startConnectionDiagnostics(
     await previous?.flush();
   }
   // Connection startup never waits for this optional preference or event storage.
-  const ready = storage
-    .get(DIAGNOSTIC_ENABLED_KEY)
+  const ready = Promise.resolve()
+    .then(() => storage.get(DIAGNOSTIC_ENABLED_KEY))
     .then(async (items) => {
       if (items[DIAGNOSTIC_ENABLED_KEY] === true) await start("worker.start");
     })
