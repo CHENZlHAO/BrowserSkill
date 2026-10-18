@@ -1,6 +1,6 @@
 # Extension connection diagnostics
 
-Connection diagnostics help distinguish a stopped worker, an outstanding socket attempt, and a reconnect request skipped by the connection controller. Recording is **off by default**. This feature observes the connection lifecycle; it does not change retry policy or claim to fix [#395](https://github.com/Tencent/BrowserSkill/issues/395).
+Connection diagnostics support the investigation and eventual fix of [#395](https://github.com/Tencent/BrowserSkill/issues/395). The goal is to capture extension-side evidence during a real reconnect failure, correlate it with daemon logs, and identify the cause before choosing a fix. Recorded events can help distinguish worker/alarm delivery gaps, an outstanding socket attempt, and reconnect requests skipped by the connection controller, subject to the storage and scheduling limits below. Recording is **off by default**. The reported failure remains unreproduced locally; this diagnostic step does not yet resolve it or change retry policy.
 
 ## Capture a failure
 

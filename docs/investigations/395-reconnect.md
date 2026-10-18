@@ -1,6 +1,6 @@
 # Investigation: extension reconnect silence after a daemon restart
 
-Status on 2026-10-17: **not reproduced; root cause unconfirmed**. Related issue: [#395](https://github.com/Tencent/BrowserSkill/issues/395). This investigation motivates optional extension-side diagnostics, not a retry-policy change or closure of the issue.
+Status on 2026-10-17: **not reproduced; root cause unconfirmed**. Related issue: [#395](https://github.com/Tencent/BrowserSkill/issues/395). The investigation and optional extension-side diagnostics are intended to advance the diagnosis and eventual fix of #395. Their immediate purpose is to capture the missing extension-side evidence during a real failure so a targeted fix can be developed and verified. The current contribution does not yet resolve the reported failure.
 
 ## Reported failure and remaining environment differences
 
@@ -61,4 +61,4 @@ Eight characterization probes and 115 related existing tests passed. Injecting a
 
 Before repeating ordinary restart/sleep cycles, capture extension-side boot, alarm, socket and gate events during a real failure and correlate them with daemon logs. Preserve the current installation/state where possible. Avoid opening DevTools or toggling the connection until stored observations have been exported.
 
-The contribution provides [optional bounded diagnostics](../connection-diagnostics.md), regression coverage for the recorder/control lifecycle, and this investigation record. Retry delays, handshake deadlines, cleanup ordering and keepalive policy remain unchanged. This document does not request that #395 be marked fixed.
+To advance #395 toward a verified fix, the contribution provides [optional bounded diagnostics](../connection-diagnostics.md), regression coverage for the recorder/control lifecycle, and this investigation record. The next step is to correlate events from a real failure with daemon logs, identify the cause, and add a targeted regression test and fix. Retry delays, handshake deadlines, cleanup ordering and keepalive policy remain unchanged at this diagnostic stage. Keep #395 open until the reported failure has been addressed and the fix verified.
